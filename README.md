@@ -1,143 +1,131 @@
 # SkillBridge
 
-**SkillBridge** is an explainable AI skill and opportunity matching platform for students, career offices, and recruiters.
+**SkillBridge** is an explainable opportunity-matching platform for university students in South Korea. It collects listings from legally accessible Korean sources, normalizes them into one schema, and matches them against a student profile — showing the score, the factors behind it, and the original posting.
 
-**Tagline:** _Turn skills into evidence-backed opportunities._
-
-SkillBridge helps a student understand:
-
-- Which skills they have already demonstrated
-- Which requirements an opportunity expects
-- Why an opportunity is a strong or weak match
-- Which gaps should be addressed next
-- Which project, course, or training step could close a gap
-
-Career offices and recruiters use the same evidence model to review opportunities and candidates. The system supports human decisions; it does not automatically reject students or applicants.
+**Tagline:** _Tell Skill Bridge who you are and what you want. It searches the opportunity ecosystem for you._
 
 ## The problem
 
-Student abilities are spread across several places:
+A student in Korea searching for relevant work does this manually:
 
-- CVs and résumés
-- GitHub repositories
-- Projects
-- Coursework
-- Leadership and volunteering
-- Certifications and workshops
+```text
+Search Alba
+→ Search Karrot
+→ Search Albamoon
+→ Search the university website
+→ Translate Korean
+→ Check requirements
+→ Compare jobs
+```
 
-Meanwhile, opportunity descriptions contain many implied and technical requirements. Students often do not know which requirements matter, which skills they already have, or what evidence an employer needs.
+Listings are scattered across several platforms, often written only in Korean, and must be filtered by hand against a student's actual skills, major, language level, location, availability, and goals. A student also cannot reliably tell, from a Korean listing, whether they meet a requirement, whether it is mandatory or preferred, or whether they may legally work in Korea.
 
-Career offices and recruiters also need a repeatable way to review profiles without relying on informal impressions.
+## What SkillBridge does
+
+```text
+Student Profile
+      ↓
+  SkillBridge
+      ↓
+Multiple Opportunity Sources
+      ↓
+   Normalize
+      ↓
+    Filter
+      ↓
+Explainable Matching
+      ↓
+  Personalized Feed
+      ↓
+Original Application Link
+```
+
+The application always happens on the original platform. SkillBridge is never the employer and never submits anything on a student's behalf.
 
 ## Users and roles
 
 ### Student
 
-The primary user. A student can:
+The only user in the MVP. A student can:
 
-- Create a profile
-- Add skills and project evidence
-- Import a CV or GitHub profile
-- Paste an opportunity description
-- View an evidence-based match
-- Create a skill-gap plan
-- Save and track opportunities
+- Build a profile with skills, major, TOPIK level, locations, and availability
+- See a personalized, scored feed
+- Read why each listing matched and what is missing
+- Filter, search, and use natural-language search
+- Save opportunities, track applications, and set alerts
+- Reach the original posting in one click
+- Correct any extracted field
 
-### Career office
+### Admin
 
-A potential institutional customer. A career office can:
+Operational only: source health, sync history, failure counts. Not a product surface.
 
-- Publish approved opportunities
-- Review structured student profiles
-- View aggregate cohort skill trends
-- Monitor student participation and outcomes
-- Export human-reviewed shortlists
-
-### Recruiter or employer
-
-A later-stage user. A recruiter can:
-
-- Create an opportunity
-- Search for verified skills and project evidence
-- Compare candidates using transparent criteria
-- Save a human-reviewed shortlist
-
-### Mentor or partner organization
-
-An optional partner that can publish opportunities, events, workshops, or projects.
-
-## MVP principle
-
-Build one core matching engine and three role-based interfaces. Do not build three unrelated products.
-
-### Release 1 — Student workflow
-
-1. Student profile
-2. Skills and project evidence
-3. Paste a job or opportunity description
-4. Requirement extraction
-5. Match score with evidence and gaps
-6. Skill-gap action plan
-7. Saved opportunities
-
-### Release 2 — Career-office workflow
-
-1. Organization account
-2. Opportunity publishing
-3. Cohort-level analytics
-4. Human review queue
-5. Privacy-safe exports
-
-### Release 3 — Recruiter workflow
-
-1. Search verified skills
-2. Candidate comparison
-3. Shortlist and review notes
-4. Opportunity performance analytics
+Career-office and recruiter surfaces are **deferred**, not abandoned. The role enum stays extensible so adding them needs no migration.
 
 ## Responsible AI boundary
 
-SkillBridge may assist with:
+SkillBridge **may**:
 
-- Extracting structured information
-- Summarizing opportunity descriptions
-- Comparing skills with requirements
-- Explaining evidence and gaps
-- Recommending learning or project steps
+- Extract structured requirements from listings
+- Translate and summarize descriptions
+- Compare a profile with requirements
+- Explain factors, gaps, and uncertainty
+- Surface the original posting and its source
 
-SkillBridge must not:
+SkillBridge **must not**:
 
-- Automatically reject or rank candidates for hiring
+- Bypass CAPTCHAs, authentication, paywalls, rate limits, or robots policies
+- Scrape a source without documented permission
+- Infer or advise on visa or work eligibility
+- Automatically reject or rank students or candidates
 - Make admissions or grading decisions
-- Scrape private personal data
+- Submit applications on a student's behalf
+- Present a score as a probability of getting a job
 - Store passport numbers, national IDs, or grades
-- Promise that a student will get a job
 - Replace human judgment
 
-Every match must be explainable and open to correction by the student.
+Every match must be explainable, must report what it could not assess, and must
+be open to correction by the student.
+
+## MVP principle
+
+The core technical challenge is **reliable opportunity ingestion + normalization
++ matching + freshness + source transparency** — not a large AI surface. The
+MVP proves that a student can find a relevant opportunity faster than by
+searching five platforms, and that every score can be justified.
+
+Staged plan in [`docs/ROADMAP.md`](docs/ROADMAP.md). Stage 1 — verifying what
+each source actually permits — gates all ingestion work.
 
 ## Current repository stage
 
-**Status:** Release 1 (student workflow) prototype is runnable.
+**Status:** design complete for the aggregator MVP. The existing prototype is
+runnable and its matching engine carries forward.
 
-Implemented today:
+Implemented and tested today:
 
 - Student profile with skills and project evidence
 - Opportunity input with an optional required/preferred skill split
 - Requirement extraction from the opportunity description
-- Match score with matched skills, gaps, project evidence, and a written explanation
-- Interactive 3D bridge scene that visualizes the live match result
+- Deterministic match score with matched skills, gaps, evidence, and explanation
+- Word-boundary skill matching (`sql` no longer matches `postgresql`)
+- Interactive 3D bridge scene rendering the live match result
 - Sample data endpoint for a fast demo
 - Unit tests, GitHub Actions CI, and a Docker image
 
-Still planned for Release 1:
+Next, per the roadmap:
 
-- Skill-gap action plan
-- Saved opportunities and history
-- Optional CV or GitHub import
-- Labeled evaluation dataset for scoring quality
+1. Verify what each target source actually permits, and record it
+2. PostgreSQL schema and the ingestion pipeline
+3. Korean normalization and requirement extraction
+4. Search and filters
+5. Weighted explainable matching on the real profile shape
+6. Saves, applications, and alerts
+7. Labeled evaluation set, then semantic recall
 
-Releases 2 and 3 (career office and recruiter) are unchanged and still gated on student validation.
+The prototype stays runnable while this proceeds. `matcher.py` is extended, not
+replaced, and the 3D scene is wrapped as a React component rather than
+rewritten.
 
 ## Run it locally
 
@@ -160,17 +148,44 @@ With Docker:
 docker compose up --build
 ```
 
-## Matching in this prototype
+## Source access policy
 
-Matching is deterministic and inspectable. It is intentionally not a black-box model yet:
+This is the constraint that decides what the platform can actually offer, so it
+is stated early. See [`docs/SOURCE_ADAPTERS.md`](docs/SOURCE_ADAPTERS.md).
 
-- A curated skill catalog detects known skill phrases in the description
+Automated access is permitted **only** when it is documented and current. Each
+source declares one mode, with the evidence recorded in the source registry:
+
+| Mode | Meaning |
+| --- | --- |
+| `official_api` | Documented API, respecting documented limits |
+| `official_feed` | Published RSS/Atom or export |
+| `permitted_endpoint` | Endpoint documented as public |
+| `partner_feed` | Agreed feed, with the agreement on file |
+| `link_only` | No permitted access — offer a scoped search link instead |
+| `blocked` | Prohibited — no adapter, and CI fails if one appears |
+
+`link_only` is a **first-class outcome, not a failure**. It produces a deep
+search URL scoped to the student's profile, which still replaces several manual
+searches. Inventing a scraper to fill the registry would produce a demo that
+cannot legally run.
+
+## Matching
+
+Matching is deterministic and inspectable, and stays that way through the MVP:
+
+- A curated skill catalog detects known skill phrases
 - Skills match on word boundaries, so `sql` does not match `postgresql`
-- Required and preferred skills are scored separately
-- Project text is scanned to show which project supports which skill
-- The score, the matched list, and the gaps are all returned in the API response
+- Korean aliases resolve `파이썬` and `Python` to one skill
+- Required and preferred are scored separately — `우대` means *preferred*
+- Weights are configurable and validated to sum to 1.0
+- An unevaluable factor is reported as **unknown**, never imputed as zero
+- The score, per-factor detail, gaps, and caveats are all returned in the response
 
-This rule-based version exists so the explanation quality can be evaluated against a labeled dataset before any model is introduced.
+The rule-based engine exists so explanation quality can be measured against a
+labeled dataset before any model is introduced. Semantic embeddings come at
+Stage 9, behind a flag, for recall only — they never overwrite the rule-based
+score.
 
 ## The 3D bridge scene
 
@@ -210,26 +225,42 @@ Prototype today:
 - **CI/CD:** GitHub Actions
 - **Deployment:** Docker
 
-Production direction:
+Production direction (per [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)):
 
-- **Frontend:** Next.js/React for the product UI
-- **Backend:** Python FastAPI
-- **Database:** PostgreSQL
-- **Semantic search:** pgvector in a later milestone
-- **Document parsing:** PDF/Markdown ingestion with consent
-- **Evaluation:** labeled skill/opportunity dataset and human review
+- **Frontend:** React + Vite + TypeScript + Tailwind
+- **Backend:** Python FastAPI, unchanged
+- **Database:** PostgreSQL, with `jsonb` and partial indexes
+- **Vector search:** pgvector at Stage 9
+- **Background sync:** RQ or APScheduler, not Celery, until fan-out requires it
+- **NLP:** deterministic extraction first, embeddings behind a flag
+- **Evaluation:** labeled listing set and human review
 
-The prototype uses SQLite and a plain frontend so it can be run and reviewed with one command. The domain model and API shape are designed to migrate to the production stack without a rewrite.
+The prototype uses SQLite and a plain frontend so it can be run and reviewed with
+one command. The domain model, matching engine, and 3D scene carry forward into
+the production stack without a rewrite.
 
 ## Documentation
 
+Design and specification:
+
 - [`docs/PRODUCT_SPEC.md`](docs/PRODUCT_SPEC.md)
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+- [`docs/SOURCE_ADAPTERS.md`](docs/SOURCE_ADAPTERS.md)
 - [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md)
-- [`docs/USER_RESEARCH_PLAN.md`](docs/USER_RESEARCH_PLAN.md)
+- [`docs/OPPORTUNITY_SCHEMA.md`](docs/OPPORTUNITY_SCHEMA.md)
+- [`docs/MATCHING_DESIGN.md`](docs/MATCHING_DESIGN.md)
+- [`docs/API_SPEC.md`](docs/API_SPEC.md)
+- [`docs/FOLDER_STRUCTURE.md`](docs/FOLDER_STRUCTURE.md)
 - [`docs/ROADMAP.md`](docs/ROADMAP.md)
+
+Process:
+
+- [`docs/USER_RESEARCH_PLAN.md`](docs/USER_RESEARCH_PLAN.md)
 - [`docs/RUNNING_LOCALLY.md`](docs/RUNNING_LOCALLY.md)
 
 ## API
+
+Implemented today in the prototype:
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
@@ -240,6 +271,10 @@ The prototype uses SQLite and a plain frontend so it can be run and reviewed wit
 | `GET` | `/api/opportunities` | List opportunities |
 | `POST` | `/api/matches` | Create an explainable match |
 | `POST` | `/api/demo` | Load sample profile and opportunity |
+
+The target MVP API is specified in [`docs/API_SPEC.md`](docs/API_SPEC.md) and
+adds filters, recommendations, natural-language search, saves, applications,
+alerts, sources, and corrections.
 
 Interactive API docs are available at `http://127.0.0.1:8000/docs` while the server is running.
 
@@ -253,8 +288,11 @@ What decision or task does this support?
 What evidence is shown?
 What can the human correct or override?
 How will quality be measured?
+Is the data access permitted?
 ```
 
 ## License decision
 
-Choose an appropriate open-source license before publishing code beyond a portfolio repository. This project does not make that legal decision automatically.
+Choose an appropriate open-source license before publishing code beyond a
+portfolio repository. This project does not make that legal decision
+automatically.

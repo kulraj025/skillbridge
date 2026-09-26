@@ -1,128 +1,169 @@
 # SkillBridge product specification
 
+Rewritten for the opportunity-aggregator scope. Supersedes the earlier
+evidence-only three-role spec, which had no ingestion layer and could not answer
+"where did this opportunity come from".
+
 ## 1. Product statement
 
-SkillBridge is an explainable AI system that converts a student's profile and an opportunity description into a transparent match, evidence list, and skill-gap plan.
+SkillBridge continuously collects legally accessible Korean opportunity
+listings, normalizes them into one schema, and matches them against a student
+profile — showing the score, the factors behind it, and the original posting.
+
+The hard part is reliable, permitted, explainable ingestion. Matching is
+downstream of it.
 
 ## 2. Problem statement
 
-Students often have relevant experience but cannot express it in the language employers use. Career offices and recruiters need consistent evidence, but they should not lose the ability to make human decisions.
+Students in Korea search for opportunities across Alba, Albamoon, Karrot,
+university career portals, lab pages, and company sites. Listings are scattered,
+often written only in Korean, and must be manually filtered against a student's
+actual skills, major, language level, location, availability, and goals.
+
+The work is repetitive and the requirements are hard to verify. A student
+cannot tell, from a Korean listing, whether they meet a requirement, which
+requirement is preferred rather than mandatory, or whether they may legally work
+in Korea.
 
 ## 3. Product goals
 
 ### Student goals
 
-- Understand what an opportunity requires
-- See which existing skills match those requirements
-- Identify the most important gaps
-- Choose a practical next step
-- Improve a CV, project portfolio, or application
+- See relevant opportunities without searching five platforms manually
+- Understand each listing's requirements in their own language
+- Know why a listing matched and what is missing
+- Know what the source actually said about international-student eligibility
+- Reach the original posting in one click
+- Track saves, applications, and deadlines
 
-### Career-office goals
+### Institutional goals (deferred)
 
-- Publish opportunities consistently
-- Review student evidence efficiently
-- Identify cohort skill gaps
-- Track participation and outcomes
+Career offices and employers may later need visibility into cohort skill trends
+and structured opportunity publishing. This is not in the MVP.
 
-### Recruiter goals
+## 4. Non-goals
 
-- Search for verified skills
-- Compare candidates using explainable evidence
-- Keep final decisions human-reviewed
-
-## 4. Non-goals for the MVP
-
-- Automatic rejection or ranking
-- Automatic job applications
-- Scraping private LinkedIn or job-board data
-- Salary prediction
-- Immigration or visa advice
-- Replacing the career office or recruiter
-- Generating unsupported claims about a student
+- Bypassing CAPTCHAs, authentication, paywalls, rate limits, or robots policies
+- Scraping a source without documented permission
+- Inferring visa or work eligibility
+- Submitting applications on a student's behalf
+- Presenting SkillBridge as the employer
+- Promising a job or a placement outcome
+- Automatic rejection of students or candidates
+- Advice on Korean immigration or labour law
 
 ## 5. Core user flow
 
 ```text
-Student creates profile
-→ Adds skills and project evidence
-→ Pastes an opportunity description
-→ System extracts requirements
-→ System matches requirements to evidence
-→ Student reviews the explanation
-→ Student saves the opportunity
-→ System creates a skill-gap plan
-→ Student or career office reviews the result
+Student creates profile (skills, major, TOPIK, locations, availability)
+  ↓
+SkillBridge syncs sources on each source's own interval
+  ↓
+Normalization + Korean extraction + dedupe + expiry
+  ↓
+Weighted explainable matching against the profile
+  ↓
+Personalized feed: score, factors, gaps, eligibility notice, source link
+  ↓
+Student saves, applies on the original site, and tracks status
+  ↓
+Alerts notify on new matches
 ```
 
 ## 6. Matching requirements
 
-The first matching engine should expose:
+Three stages, documented in [`MATCHING_DESIGN.md`](MATCHING_DESIGN.md):
 
-- Required skills
-- Preferred skills
-- Responsibilities
-- Minimum qualifications
-- Seniority or education requirements
-- Missing evidence
-- Contradictions or ambiguous requirements
+1. Hard eligibility filters, with excluded items disclosed rather than dropped
+2. Rule-based weighted scoring producing per-factor detail
+3. Optional semantic recall for recall only, added after evaluation
 
-The first implementation can use structured extraction plus deterministic scoring. A semantic model may be added after the evaluation dataset exists.
+Non-negotiable properties:
+
+- Every score decomposes into factors a student can inspect
+- Unevaluable factors are reported as unknown, never imputed as zero
+- A bare score is not a valid API response
+- The score is labelled as an estimate, not a probability of getting the job
 
 ## 7. Explainability requirements
 
-Every match should show:
-
 ```text
-Overall match: 78%
+SkillBridge match: 87%
 
-Evidence:
-- Built a PHP/MySQL web application
-- Used JavaScript in a deployed portfolio
-- Led a student organization
+Why this opportunity?
+  ✓ Your Python skill matches a required skill
+  ✓ Your AI/Computer Science major is relevant
+  ✓ Location is within your preferred area
+  ⚠ Korean: posting prefers TOPIK 4, your profile states TOPIK 3
 
-Gaps:
-- No React project evidence
-- No SQL evidence in the current profile
-- No internship experience listed
+Not assessed: experience
 
-Confidence:
-- High for technical keywords
-- Medium for responsibility descriptions
+This is an estimate based on the information in the posting, not a hiring
+decision. Visa and work authorization are not assessed by SkillBridge.
+
+[Source: Example University Career Center · synchronized 12 min ago]
+[View original posting]
 ```
 
-The student must be able to correct extracted skills or add missing evidence.
+The student must be able to correct an extracted field, and corrections are
+recorded as student-asserted overrides.
 
-## 8. Roles and permissions
+## 8. Trust and eligibility requirements
 
-| Role | Permissions |
-|---|---|
-| Student | Manage own profile, evidence, opportunities, and plans |
-| Career office | Manage organization opportunities and view cohort-level analytics |
-| Recruiter | Create opportunities and view candidate profiles allowed by consent |
-| Mentor | Share opportunities and review student-requested guidance |
-| Admin | Manage security, audit, and policy settings |
+A product requirement, not an implementation detail.
 
-No role receives automatic hiring authority.
+| Source states | Rendered as |
+| --- | --- |
+| `외국인 가능` | "International applicants: stated as accepted by the employer." |
+| `외국인 visa 필요` | "Employer states a visa is required. Check your authorization before applying." |
+| Nothing | "International-student eligibility: not specified by the source." |
 
-## 9. MVP success measures
+Never rendered: "You are legally allowed to work in Korea."
 
-- Profile completion rate
-- Time to understand an opportunity description
+Every opportunity must show its source, its real synchronization age, and a link
+to the original posting. Aggregated data must not be presented as if it came
+from a single official feed.
+
+## 9. Source access policy
+
+Full policy in [`SOURCE_ADAPTERS.md`](SOURCE_ADAPTERS.md). Each source declares
+one access mode — `official_api`, `official_feed`, `permitted_endpoint`,
+`partner_feed`, `link_only`, or `blocked` — with the evidence recorded.
+
+`link_only` is a first-class outcome, not a failure. It yields a search link
+scoped to the student's profile, which still replaces several manual searches.
+
+## 10. Success measures
+
+MVP:
+
+- Source sync success rate and freshness distribution
+- Duplicate rate across sources
+- Extraction precision and recall on a labeled set
+- Required vs preferred classification accuracy
+- Top-10 recommendation recall for known profiles
 - Student-rated usefulness of explanations
-- Precision of extracted requirements on a labeled test set
-- Number of gaps converted into a learning or project action
-- Career-office time saved per review
-- Correction rate for extracted skills
+- Time to find a relevant opportunity, versus manual search
+- Save rate and alert usefulness
 
-Do not claim job-placement guarantees.
+No placement claims. The pilot measures discovery efficiency, not hiring
+outcomes.
 
-## 10. Privacy requirements
+## 11. Privacy requirements
 
-- Collect only data needed for the matching workflow
-- Show what is stored and why
-- Allow students to export or delete their data
-- Do not store sensitive identity documents
-- Separate career-office analytics from individual student views
-- Record who viewed or exported candidate data
-- Obtain consent before reusing CV or project content
+Collected: account email, profile fields the student chose to enter, saved
+items, application notes and status.
+
+Not collected: personal data about job posters or employers, CV contents unless
+the student uploads them, location history, third-party profile data without
+explicit consent.
+
+Students can export and delete their data. Opportunity rows are retained after
+expiry for aggregate analytics with no personal data attached.
+
+## 12. Roles
+
+`student` and `admin` only in the MVP. Career-office and recruiter surfaces are
+deferred, and the enum stays extensible so adding them needs no migration.
+
+No role receives automatic hiring authority, in this release or any future one.
