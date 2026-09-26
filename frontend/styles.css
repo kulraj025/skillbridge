@@ -27,7 +27,12 @@ button { cursor: pointer; }
 .brand-mark { width: 37px; height: 37px; display: grid; place-items: center; border-radius: 11px; color: #06201f; background: linear-gradient(135deg, var(--cyan), var(--cyan-2)); font-weight: 900; }
 .brand strong { display: block; letter-spacing: -.02em; }
 .brand small { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; }
+.topbar-badges { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; justify-content: flex-end; }
 .phase-badge, .pill { border: 1px solid var(--border); border-radius: 999px; padding: 7px 10px; color: var(--muted); font-size: 11px; font-weight: 750; }
+.api-status.checking { color: var(--faint); }
+.api-status.ok { color: var(--green); border-color: rgba(111,224,164,.32); background: rgba(111,224,164,.07); }
+.api-status.down { color: var(--red); border-color: rgba(255,146,146,.34); background: rgba(255,146,146,.08); }
+.button:disabled { opacity: .55; cursor: progress; transform: none; }
 .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(420px, 520px); gap: clamp(24px, 4vw, 52px); align-items: center; padding: 62px 0 40px; }
 .hero-intro { display: grid; gap: 0; }
 .eyebrow { color: var(--cyan); font-size: 10px; font-weight: 850; letter-spacing: .16em; text-transform: uppercase; margin: 0; }

@@ -18,10 +18,47 @@ function showToast(message) {
 }
 
 async function api(path, options = {}) {
-  const response = await fetch(path, { headers: { "Content-Type": "application/json", ...(options.headers || {}) }, ...options });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.detail || "Request failed. Please try again.");
+  const method = options.method || "GET";
+  let response;
+  try {
+    response = await fetch(path, { headers: { "Content-Type": "application/json", ...(options.headers || {}) }, ...options });
+  } catch (networkError) {
+    throw new Error(
+      `Cannot reach the SkillBridge server at ${window.location.origin}. ` +
+      `Start it with: python -m uvicorn app.main:app --app-dir backend --reload`
+    );
+  }
+  const text = await response.text();
+  let data = {};
+  if (text) {
+    try { data = JSON.parse(text); } catch (parseError) { data = { detail: text }; }
+  }
+  if (!response.ok) {
+    const raw = data.detail;
+    const detail = typeof raw === "string"
+      ? raw
+      : Array.isArray(raw)
+        ? raw.map((item) => item.msg || JSON.stringify(item)).join("; ")
+        : text.slice(0, 180);
+    throw new Error(`${method} ${path} failed (HTTP ${response.status})${detail ? `: ${detail}` : ""}`);
+  }
   return data;
+}
+
+async function checkApi() {
+  const badge = $("#api-status");
+  if (!badge) return;
+  try {
+    const response = await fetch("/api/health", { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    badge.textContent = `API connected · v${data.version || "?"}`;
+    badge.className = "phase-badge api-status ok";
+  } catch (error) {
+    badge.textContent = "API not reachable";
+    badge.className = "phase-badge api-status down";
+    badge.title = "Start the backend: python -m uvicorn app.main:app --app-dir backend --reload";
+  }
 }
 
 function setStatus(selector, text, kind = "") {
@@ -247,4 +284,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initReveal();
   initCounters();
   initTilt();
+  checkApi();
+  // Re-check when the user returns to the tab, in case they just started the server.
+  window.addEventListener("focus", checkApi);
 });

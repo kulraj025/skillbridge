@@ -116,8 +116,23 @@ def demo() -> Dict[str, Any]:
     return {"profile": profile, "opportunity": opportunity}
 
 
+class RevalidatingStaticFiles(StaticFiles):
+    """Serve the prototype frontend with revalidation.
+
+    Without an explicit Cache-Control header, browsers apply heuristic caching
+    and can keep serving a stale app.js after an edit, which makes correct code
+    look broken. no-cache still allows conditional requests, so unchanged files
+    cost a 304 rather than a full download.
+    """
+
+    def file_response(self, *args, **kwargs):
+        response = super().file_response(*args, **kwargs)
+        response.headers["Cache-Control"] = "no-cache, must-revalidate"
+        return response
+
+
 FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
-app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
+app.mount("/", RevalidatingStaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
 
 
 if __name__ == "__main__":
