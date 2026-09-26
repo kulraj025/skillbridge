@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: skillbridge
+    env: docker
+    dockerfilePath: Dockerfile
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: SKILLBRIDGE_DB
+        value: /app/backend/data/skillbridge.db
+    autoDeploy: true
