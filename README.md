@@ -118,29 +118,79 @@ Every match must be explainable and open to correction by the student.
 
 ## Current repository stage
 
-The first repository milestone is the product and data foundation:
+**Status:** Release 1 (student workflow) prototype is runnable.
 
-- Product scope
-- User roles
-- Data model
-- API direction
-- Research plan
-- Implementation roadmap
+Implemented today:
 
-The working application will be added incrementally after the scope is validated.
+- Student profile with skills and project evidence
+- Opportunity input with an optional required/preferred skill split
+- Requirement extraction from the opportunity description
+- Match score with matched skills, gaps, project evidence, and a written explanation
+- Sample data endpoint for a fast demo
+- Unit tests, GitHub Actions CI, and a Docker image
+
+Still planned for Release 1:
+
+- Skill-gap action plan
+- Saved opportunities and history
+- Optional CV or GitHub import
+- Labeled evaluation dataset for scoring quality
+
+Releases 2 and 3 (career office and recruiter) are unchanged and still gated on student validation.
+
+## Run it locally
+
+Full instructions are in [`docs/RUNNING_LOCALLY.md`](docs/RUNNING_LOCALLY.md). The short version:
+
+```powershell
+cd "C:\Users\ADMIN\Documents\Default Project\skillbridge"
+python -m venv .venv
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r backend\requirements.txt
+python -m uvicorn app.main:app --app-dir backend --reload
+```
+
+Then open `http://127.0.0.1:8000` and click **Load sample data**.
+
+With Docker:
+
+```powershell
+docker compose up --build
+```
+
+## Matching in this prototype
+
+Matching is deterministic and inspectable. It is intentionally not a black-box model yet:
+
+- A curated skill catalog detects known skill phrases in the description
+- Skills match on word boundaries, so `sql` does not match `postgresql`
+- Required and preferred skills are scored separately
+- Project text is scanned to show which project supports which skill
+- The score, the matched list, and the gaps are all returned in the API response
+
+This rule-based version exists so the explanation quality can be evaluated against a labeled dataset before any model is introduced.
 
 ## Technology direction
+
+Prototype today:
+
+- **Backend:** Python FastAPI
+- **Storage:** SQLite via the standard library (no external service required)
+- **Frontend:** dependency-free HTML, CSS, and JavaScript
+- **CI/CD:** GitHub Actions
+- **Deployment:** Docker
+
+Production direction:
 
 - **Frontend:** Next.js/React for the product UI
 - **Backend:** Python FastAPI
 - **Database:** PostgreSQL
 - **Semantic search:** pgvector in a later milestone
 - **Document parsing:** PDF/Markdown ingestion with consent
-- **Deployment:** Docker and a managed hosting provider
-- **CI/CD:** GitHub Actions
 - **Evaluation:** labeled skill/opportunity dataset and human review
 
-The first prototype may use a simpler UI or local mock data, but the domain model should be designed for the production stack.
+The prototype uses SQLite and a plain frontend so it can be run and reviewed with one command. The domain model and API shape are designed to migrate to the production stack without a rewrite.
 
 ## Documentation
 
@@ -148,6 +198,21 @@ The first prototype may use a simpler UI or local mock data, but the domain mode
 - [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md)
 - [`docs/USER_RESEARCH_PLAN.md`](docs/USER_RESEARCH_PLAN.md)
 - [`docs/ROADMAP.md`](docs/ROADMAP.md)
+- [`docs/RUNNING_LOCALLY.md`](docs/RUNNING_LOCALLY.md)
+
+## API
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/health` | Service check |
+| `POST` | `/api/profiles` | Create a student profile |
+| `GET` | `/api/profiles/{id}` | Profile with match history |
+| `POST` | `/api/opportunities` | Create an opportunity |
+| `GET` | `/api/opportunities` | List opportunities |
+| `POST` | `/api/matches` | Create an explainable match |
+| `POST` | `/api/demo` | Load sample profile and opportunity |
+
+Interactive API docs are available at `http://127.0.0.1:8000/docs` while the server is running.
 
 ## Development principle
 

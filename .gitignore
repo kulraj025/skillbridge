@@ -16,6 +16,7 @@ coverage/
 # Local databases and secrets
 *.db
 *.sqlite3
+backend/data/
 .env
 .env.*
 !.env.example

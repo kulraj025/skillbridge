@@ -1,0 +1,12 @@
+services:
+  skillbridge:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      SKILLBRIDGE_DB: /app/backend/data/skillbridge.db
+    volumes:
+      - skillbridge-data:/app/backend/data
+
+volumes:
+  skillbridge-data:

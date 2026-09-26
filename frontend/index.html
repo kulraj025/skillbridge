@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="SkillBridge - turn skills into evidence-backed opportunities." />
+    <title>SkillBridge | Evidence-backed opportunity matching</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="SkillBridge home">
+          <span class="brand-mark">S</span>
+          <span><strong>SkillBridge</strong><small>Evidence-backed career matching</small></span>
+        </a>
+        <span class="phase-badge">Student MVP · local prototype</span>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div>
+            <p class="eyebrow">Explainable AI career technology</p>
+            <h1>Turn skills into<br /><em>evidence-backed</em> opportunities.</h1>
+            <p class="hero-copy">Create a profile, add project evidence, and compare your skills with an opportunity. The system shows its reasoning instead of hiding a score.</p>
+          </div>
+          <div class="hero-actions">
+            <button id="demo-button" class="button button-primary" type="button">Load sample data</button>
+            <span class="local-note">No model key required for this local prototype.</span>
+          </div>
+        </section>
+
+        <section class="workflow" aria-label="How SkillBridge works">
+          <div><span>01</span><strong>Build your profile</strong><small>Skills and project evidence</small></div>
+          <div><span>02</span><strong>Add an opportunity</strong><small>Paste a real job description</small></div>
+          <div><span>03</span><strong>Review the match</strong><small>Evidence, gaps, next steps</small></div>
+        </section>
+
+        <section class="workspace">
+          <div class="forms-column">
+            <article class="panel">
+              <div class="panel-heading">
+                <div><p class="eyebrow">Student profile</p><h2>What evidence do you have?</h2></div>
+                <span id="profile-status" class="pill">Not saved</span>
+              </div>
+              <form id="profile-form" class="stack-form">
+                <label>Name<input id="profile-name" required maxlength="100" placeholder="Your name" /></label>
+                <div class="two-columns">
+                  <label>Major<input id="profile-major" maxlength="120" placeholder="Artificial Intelligence" /></label>
+                  <label>Graduation year<input id="profile-year" type="number" min="1950" max="2100" placeholder="2027" /></label>
+                </div>
+                <label>Skills <span class="hint">comma-separated</span><input id="profile-skills" required placeholder="Python, SQL, Communication" /></label>
+                <label>Project evidence <span class="hint">one project per line</span><textarea id="profile-projects" rows="4" placeholder="Built a Python API&#10;Led a student organization"></textarea></label>
+                <button class="button button-secondary full-width" type="submit">Save student profile</button>
+              </form>
+            </article>
+
+            <article class="panel">
+              <div class="panel-heading">
+                <div><p class="eyebrow">Opportunity</p><h2>What does the role require?</h2></div>
+                <span id="opportunity-status" class="pill">Not saved</span>
+              </div>
+              <form id="opportunity-form" class="stack-form">
+                <label>Role title<input id="opportunity-title" required maxlength="160" placeholder="Junior AI Application Developer" /></label>
+                <label>Organization<input id="opportunity-organization" required maxlength="140" placeholder="Company or organization" /></label>
+                <label>Job description<textarea id="opportunity-description" required rows="5" placeholder="Paste the role description here. SkillBridge will detect known skills and compare them with your profile."></textarea></label>
+                <div class="two-columns">
+                  <label>Required skills <span class="hint">optional</span><input id="required-skills" placeholder="Python, SQL" /></label>
+                  <label>Preferred skills <span class="hint">optional</span><input id="preferred-skills" placeholder="REST API, teamwork" /></label>
+                </div>
+                <label>Source URL <span class="hint">optional</span><input id="opportunity-source" type="url" placeholder="https://..." /></label>
+                <button class="button button-secondary full-width" type="submit">Save opportunity</button>
+              </form>
+            </article>
+          </div>
+
+          <aside class="results-column">
+            <article class="panel result-panel">
+              <div class="panel-heading">
+                <div><p class="eyebrow">Decision support</p><h2>Explainable match</h2></div>
+                <span id="match-status" class="pill">Waiting</span>
+              </div>
+              <div id="match-empty" class="result-empty">
+                <div class="result-icon">↗</div>
+                <h3>Save both items to begin</h3>
+                <p>Your result will show matched skills, missing requirements, project evidence, and an explanation you can inspect.</p>
+              </div>
+              <div id="match-result" class="hidden">
+                <div class="score-area">
+                  <div class="score-ring" id="score-ring"><strong id="score-value">0%</strong><span>match</span></div>
+                  <div><p class="eyebrow">Profile → opportunity</p><h3 id="match-title">—</h3><p id="match-organization" class="muted">—</p></div>
+                </div>
+                <div class="explanation-box"><span class="eyebrow">Why this result</span><p id="match-explanation">—</p></div>
+                <div class="result-section"><h4>Matched required skills</h4><div id="matched-required" class="tag-list"></div></div>
+                <div class="result-section"><h4>Missing or unverified</h4><div id="missing-required" class="tag-list"></div></div>
+                <div class="result-section"><h4>Project evidence</h4><div id="match-evidence" class="evidence-list"></div></div>
+                <div class="result-section"><h4>Preferred skills</h4><div id="matched-preferred" class="tag-list"></div></div>
+                <a id="source-link" class="source-link" href="#" target="_blank" rel="noreferrer">Open original opportunity source ↗</a>
+              </div>
+            </article>
+
+            <article class="panel safety-panel">
+              <span class="safety-icon">i</span>
+              <div><strong>Human-reviewed by design</strong><p>SkillBridge suggests evidence and gaps. It does not automatically reject students or make hiring decisions. Correct your profile and verify the original opportunity.</p></div>
+            </article>
+          </aside>
+        </section>
+      </main>
+      <footer class="footer">SkillBridge · student workflow prototype · <span id="year"></span></footer>
+    </div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="/app.js" defer></script>
+  </body>
+</html>
