@@ -1,4 +1,4 @@
-const state = { profileId: null, opportunityId: null };
+const state = { profileId: null, opportunityId: null, studentSkills: [] };
 const $ = (selector) => document.querySelector(selector);
 
 function escapeHtml(value) {
@@ -55,6 +55,7 @@ async function saveProfile(event) {
     const year = Number($("#profile-year").value);
     const profile = await api("/api/profiles", { method: "POST", body: JSON.stringify({ name: $("#profile-name").value.trim(), major: $("#profile-major").value.trim(), graduation_year: year || null, skills: splitList($("#profile-skills").value), projects: $("#profile-projects").value.split("\n").map((item) => item.trim()).filter(Boolean) }) });
     state.profileId = profile.id;
+    state.studentSkills = profile.skills || [];
     setStatus("#profile-status", "Saved", "success");
     showToast("Student profile saved.");
   } catch (error) { showToast(error.message); } finally { button.disabled = false; }
@@ -78,12 +79,27 @@ function tagList(target, values, kind = "") {
   element.innerHTML = values.map((value) => `<span class="tag ${kind}">${escapeHtml(value)}</span>`).join("");
 }
 
+function countUp(element, target, suffix) {
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduced) { element.textContent = `${target}${suffix}`; return; }
+  const duration = 1100;
+  const start = performance.now();
+  const step = (now) => {
+    const t = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - t, 3);
+    element.textContent = `${Math.round(target * eased)}${suffix}`;
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
 function renderMatch(match, opportunity) {
   $("#match-empty").classList.add("hidden");
   $("#match-result").classList.remove("hidden");
-  setStatus("#match-status", `${Math.round(match.score * 100)}% match`, "success");
-  $("#score-ring").style.setProperty("--score", `${Math.round(match.score * 100)}%`);
-  $("#score-value").textContent = `${Math.round(match.score * 100)}%`;
+  const percent = Math.round(match.score * 100);
+  setStatus("#match-status", `${percent}% match`, "success");
+  $("#score-ring").style.setProperty("--score", `${percent}%`);
+  countUp($("#score-value"), percent, "%");
   $("#match-title").textContent = opportunity.title;
   $("#match-organization").textContent = opportunity.organization;
   $("#match-explanation").textContent = match.explanation.text;
@@ -94,6 +110,24 @@ function renderMatch(match, opportunity) {
   evidence.innerHTML = match.evidence.length ? match.evidence.map((item) => `<div class="evidence-item">${escapeHtml(item.project)}<small>Evidence for: ${escapeHtml(item.matched_skills)}</small></div>`).join("") : '<span class="empty-tag">No project evidence matched yet</span>';
   const source = $("#source-link");
   if (opportunity.source_url) { source.href = opportunity.source_url; source.classList.remove("hidden"); } else { source.classList.add("hidden"); }
+  updateScene(match);
+}
+
+/** Push the real result into the 3D scene so the graphic is never decorative fiction. */
+function updateScene(match) {
+  const scene = window.skillBridgeScene;
+  if (!scene) return;
+  const studentSkills = (state.studentSkills && state.studentSkills.length)
+    ? state.studentSkills
+    : scene.graph.nodes.filter((n) => n.side === "student" && !n.isHub).map((n) => n.label);
+  const requirements = [...match.matched_required, ...match.matched_preferred, ...match.missing_required];
+  scene.setMatch({
+    studentSkills,
+    requirementSkills: requirements.length ? requirements : ["No requirements detected"],
+    matched: [...match.matched_required, ...match.matched_preferred],
+    missing: match.missing_required,
+    preferred: [],
+  });
 }
 
 async function runMatch() {
@@ -114,6 +148,7 @@ async function loadDemo() {
     const data = await api("/api/demo", { method: "POST" });
     state.profileId = data.profile.id;
     state.opportunityId = data.opportunity.id;
+    state.studentSkills = data.profile.skills || [];
     fillProfile(data.profile);
     fillOpportunity(data.opportunity);
     setStatus("#profile-status", "Sample", "success");
@@ -123,6 +158,82 @@ async function loadDemo() {
   } catch (error) { showToast(error.message); } finally { button.disabled = false; }
 }
 
+function inViewport(element) {
+  const rect = element.getBoundingClientRect();
+  return rect.top < window.innerHeight && rect.bottom > 0;
+}
+
+function initReveal() {
+  const items = Array.from(document.querySelectorAll(".reveal"));
+  if (!items.length) return;
+  const showAll = () => items.forEach((item) => item.classList.add("in"));
+  if (!("IntersectionObserver" in window) || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    showAll();
+    return;
+  }
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("in");
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15, rootMargin: "0px 0px -40px 0px" });
+  items.forEach((item, index) => {
+    item.style.transitionDelay = `${Math.min(index * 90, 360)}ms`;
+    if (inViewport(item)) { item.classList.add("in"); return; }
+    observer.observe(item);
+  });
+  // Safety net: never leave content permanently invisible.
+  setTimeout(showAll, 4000);
+}
+
+function initCounters() {
+  const elements = Array.from(document.querySelectorAll("[data-count]"));
+  const finish = (element) => {
+    countUp(element, Number(element.dataset.count), element.dataset.suffix || "");
+  };
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduced || !("IntersectionObserver" in window)) {
+    elements.forEach(finish);
+    return;
+  }
+  const pending = new Set();
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        finish(entry.target);
+        pending.delete(entry.target);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.4 });
+  elements.forEach((element) => {
+    if (inViewport(element)) { finish(element); return; }
+    pending.add(element);
+    observer.observe(element);
+  });
+  setTimeout(() => { pending.forEach(finish); pending.clear(); }, 4000);
+}
+
+function initTilt() {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  document.querySelectorAll(".panel").forEach((panel) => {
+    panel.addEventListener("pointermove", (event) => {
+      if (event.pointerType === "touch") return;
+      const rect = panel.getBoundingClientRect();
+      const px = (event.clientX - rect.left) / rect.width - 0.5;
+      const py = (event.clientY - rect.top) / rect.height - 0.5;
+      panel.style.setProperty("--ry", `${px * 4.5}deg`);
+      panel.style.setProperty("--rx", `${-py * 4.5}deg`);
+      panel.style.transform = "perspective(1000px) rotateX(var(--rx)) rotateY(var(--ry)) translateZ(0)";
+    });
+    panel.addEventListener("pointerleave", () => {
+      panel.style.transform = "";
+    });
+  });
+}
+
 function bindEvents() {
   $("#profile-form").addEventListener("submit", saveProfile);
   $("#opportunity-form").addEventListener("submit", saveOpportunity);
@@ -130,4 +241,10 @@ function bindEvents() {
   document.addEventListener("keydown", (event) => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter") runMatch(); });
 }
 
-document.addEventListener("DOMContentLoaded", () => { $("#year").textContent = new Date().getFullYear(); bindEvents(); });
+document.addEventListener("DOMContentLoaded", () => {
+  $("#year").textContent = new Date().getFullYear();
+  bindEvents();
+  initReveal();
+  initCounters();
+  initTilt();
+});

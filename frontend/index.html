@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="SkillBridge - turn skills into evidence-backed opportunities." />
     <title>SkillBridge | Evidence-backed opportunity matching</title>
+    <script>document.documentElement.className += " js";</script>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
+    <div class="aurora" aria-hidden="true"></div>
     <div class="shell">
       <header class="topbar">
         <a class="brand" href="/" aria-label="SkillBridge home">
@@ -19,15 +21,39 @@
 
       <main>
         <section class="hero">
-          <div>
+          <div class="hero-intro reveal">
             <p class="eyebrow">Explainable AI career technology</p>
             <h1>Turn skills into<br /><em>evidence-backed</em> opportunities.</h1>
             <p class="hero-copy">Create a profile, add project evidence, and compare your skills with an opportunity. The system shows its reasoning instead of hiding a score.</p>
+            <div class="hero-actions">
+              <button id="demo-button" class="button button-primary" type="button">Load sample data</button>
+              <span class="local-note">No model key required for this local prototype.</span>
+            </div>
+            <dl class="hero-stats">
+              <div><dd data-count="100" data-suffix="%">0%</dd><dt>Match explanations shown</dt></div>
+              <div><dd data-count="3">0</dd><dt>Roles in the roadmap</dt></div>
+              <div><dd data-count="0">0</dd><dt>Automatic rejections</dt></div>
+            </dl>
           </div>
-          <div class="hero-actions">
-            <button id="demo-button" class="button button-primary" type="button">Load sample data</button>
-            <span class="local-note">No model key required for this local prototype.</span>
-          </div>
+
+          <figure class="hero-scene reveal">
+            <figcaption class="scene-head">
+              <div>
+                <p class="eyebrow">Live match visualization</p>
+                <h2>Every connection is traceable</h2>
+              </div>
+              <span class="scene-hint">Drag to rotate</span>
+            </figcaption>
+            <div class="scene-canvas-wrap">
+              <canvas id="bridge-canvas" role="img" aria-label="Rotating 3D diagram: your skills on the left, the role requirements on the right, with glowing bridges only where you have matching evidence."></canvas>
+              <div id="scene-tooltip" class="scene-tooltip" aria-hidden="true"></div>
+            </div>
+            <ul class="scene-legend">
+              <li><span class="swatch" style="--swatch:#67e0d5"></span>Your skills</li>
+              <li><span class="swatch" style="--swatch:#6fe0a4"></span>Matched with evidence</li>
+              <li><span class="swatch" style="--swatch:#ff9292"></span>Gap to close</li>
+            </ul>
+          </figure>
         </section>
 
         <section class="workflow" aria-label="How SkillBridge works">
@@ -109,6 +135,7 @@
       <footer class="footer">SkillBridge · student workflow prototype · <span id="year"></span></footer>
     </div>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="/three-scene.js" defer></script>
     <script src="/app.js" defer></script>
   </body>
 </html>

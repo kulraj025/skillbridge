@@ -126,6 +126,7 @@ Implemented today:
 - Opportunity input with an optional required/preferred skill split
 - Requirement extraction from the opportunity description
 - Match score with matched skills, gaps, project evidence, and a written explanation
+- Interactive 3D bridge scene that visualizes the live match result
 - Sample data endpoint for a fast demo
 - Unit tests, GitHub Actions CI, and a Docker image
 
@@ -170,6 +171,34 @@ Matching is deterministic and inspectable. It is intentionally not a black-box m
 - The score, the matched list, and the gaps are all returned in the API response
 
 This rule-based version exists so the explanation quality can be evaluated against a labeled dataset before any model is introduced.
+
+## The 3D bridge scene
+
+`frontend/three-scene.js` draws a rotating 3D diagram: your skills on the left,
+the role requirements on the right, and a glowing bridge for every requirement
+you can back with evidence. Gaps stay visibly open, because "what you cannot
+prove yet" is the more useful half of the message.
+
+The scene reflects the **actual** match result. Clicking **Load sample data** or
+running a match repopulates it, so the graphic is never decorative fiction.
+
+It is written against Canvas 2D with a hand-rolled perspective projection. The
+scene only needs points and lines, so shipping a WebGL library would cost more
+than it returns. Rendering work is skipped while the canvas is off screen.
+
+Accessibility and performance behaviour:
+
+- `prefers-reduced-motion: reduce` disables rotation, pulses, and reveals
+- Animation stops via `IntersectionObserver` when the canvas scrolls away
+- The layout stays readable without JavaScript; reveal styles are scoped to `.js`
+- Hover tooltips are duplicated as text in the legend for assistive technology
+- Device pixel ratio is capped at 2 to avoid huge buffers on dense displays
+
+The projection and graph-building math is unit tested:
+
+```powershell
+node --test frontend/tests/scene.test.js
+```
 
 ## Technology direction
 
