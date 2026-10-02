@@ -148,6 +148,26 @@ With Docker:
 docker compose up --build
 ```
 
+## Track your streak
+
+Progress is measured from real commit history, not from a counter someone can
+edit. Regenerate the report at any time:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\update-streak.ps1
+python scripts\streak.py --json     # just the numbers
+```
+
+A Windows scheduled task named `SkillBridge-StreakUpdater` regenerates
+`docs/STREAK.md` every day at 21:00. It only reads history: it never commits
+and never pushes, so no token has to live on disk. To remove it:
+
+```powershell
+Unregister-ScheduledTask -TaskName SkillBridge-StreakUpdater -Confirm:$false
+```
+
+See [`docs/STREAK.md`](docs/STREAK.md) for the current numbers.
+
 ## Source access policy
 
 This is the constraint that decides what the platform can actually offer, so it
@@ -257,6 +277,10 @@ Process:
 
 - [`docs/USER_RESEARCH_PLAN.md`](docs/USER_RESEARCH_PLAN.md)
 - [`docs/RUNNING_LOCALLY.md`](docs/RUNNING_LOCALLY.md)
+
+Accountability:
+
+- [`docs/STREAK.md`](docs/STREAK.md) — generated from `git log`, not written by hand
 
 ## API
 
