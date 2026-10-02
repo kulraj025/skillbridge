@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import re
 from functools import lru_cache
-from typing import Any, Dict, Iterable, List, Mapping
+from typing import Any, Dict, Iterable, List, Mapping, Optional
 
 TOKEN_PATTERN = re.compile(r"[a-z0-9]+")
 
@@ -81,6 +81,30 @@ def contains_term(text: str, term: str) -> bool:
         return False
     normalized_text = " ".join(str(text or "").lower().split())
     return bool(_term_pattern(normalized_term).search(normalized_text))
+
+
+def find_term(text: str, term: str) -> Optional[Dict[str, Any]]:
+    """Return the matched phrase and its span, for auditable evidence.
+
+    Offsets refer to the whitespace-normalised lowercase text used for
+    matching, not the original string. The matched ``phrase`` is the useful
+    part: it is what gets shown to a student as the evidence for a claim.
+    """
+
+    normalized_term = " ".join(str(term or "").lower().split())
+    if not normalized_term:
+        return None
+    normalized_text = " ".join(str(text or "").lower().split())
+    match = _term_pattern(normalized_term).search(normalized_text)
+    if not match:
+        return None
+    return {
+        "term": normalized_term,
+        "phrase": match.group(0),
+        "start": match.start(),
+        "end": match.end(),
+        "text": normalized_text,
+    }
 
 
 def extract_skills(description: str) -> List[str]:

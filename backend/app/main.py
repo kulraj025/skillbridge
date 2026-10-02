@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from datetime import datetime
 from typing import Any, Dict, List
 
 from fastapi import FastAPI, HTTPException, status
@@ -10,7 +11,8 @@ from fastapi.staticfiles import StaticFiles
 
 from .db import init_db
 from .matcher import match_profile_to_opportunity
-from .models import MatchCreate, OpportunityCreate, ProfileCreate
+from .models import ExtractCreate, MatchCreate, OpportunityCreate, ProfileCreate
+from .nlp import extract_listing
 from .repository import (
     create_match,
     create_opportunity,
@@ -87,6 +89,24 @@ def matches_create(payload: MatchCreate) -> Dict[str, Any]:
         raise HTTPException(status_code=404, detail="Opportunity not found")
     result = match_profile_to_opportunity(profile, opportunity)
     return create_match(payload.profile_id, payload.opportunity_id, result)
+
+
+@app.post("/api/extract")
+def extract(payload: ExtractCreate) -> Dict[str, Any]:
+    """Run the Korean extraction pipeline over a raw listing description.
+
+    Stateless and side-effect free, so the parser can be exercised and
+    reviewed without a database or a source adapter. The response separates
+    required, preferred, unstated, and duty skills, because collapsing those
+    into one list is what makes a match score wrong in a way a student cannot
+    see.
+    """
+
+    posted_at = payload.posted_at
+    if posted_at is None:
+        posted_at = datetime.utcnow()
+    result = extract_listing(payload.description, posted_at=posted_at)
+    return result.to_dict()
 
 
 @app.post("/api/demo", status_code=status.HTTP_201_CREATED)

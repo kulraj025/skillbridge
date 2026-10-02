@@ -1,5 +1,6 @@
-"""Request models for the first SkillBridge API."""
+"""Request models for the SkillBridge API."""
 
+from datetime import date, datetime
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
@@ -25,3 +26,9 @@ class OpportunityCreate(BaseModel):
 class MatchCreate(BaseModel):
     profile_id: str = Field(..., min_length=1)
     opportunity_id: str = Field(..., min_length=1)
+
+
+class ExtractCreate(BaseModel):
+    description: str = Field(..., min_length=1, max_length=8000)
+    posted_at: Optional[datetime] = None
+    today: Optional[date] = None
