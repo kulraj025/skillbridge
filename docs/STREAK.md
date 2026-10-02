@@ -11,7 +11,7 @@
 | Current streak | **1** |
 | Longest streak | 1 |
 | Longest run | 2026-09-26 to 2026-09-26 |
-| Total commits | 9 |
+| Total commits | 10 |
 | Active days | 2 |
 | First commit | 2026-09-26 |
 | Last commit | 2026-10-02 |
@@ -30,7 +30,7 @@ Mon  |. . . . . . . . . . . . . .|
 Tue  |. . . . . . . . . . . . . .|
 Wed  |. . . . . . . . . . . . . .|
 Thu  |. . . . . . . . . . . . . .|
-Fri  |. . . . . . . . . . . . . 2|
+Fri  |. . . . . . . . . . . . . 3|
 Sat  |. . . . . . . . . . . . 4  |
 Sun  |. . . . . . . . . . . . .  |
 
@@ -40,6 +40,6 @@ Range: 2026-06-29 to 2026-10-04.
 
 | Date | Commits | Subjects |
 | --- | --- | --- |
-| 2026-10-02 | 2 | chore: drop the scratch extraction script from the repo<br>feat: Korean extraction pipeline for opportunity listings |
+| 2026-10-02 | 3 | feat: track contribution streak from real git history<br>chore: drop the scratch extraction script from the repo<br>feat: Korean extraction pipeline for opportunity listings |
 | 2026-09-26 | 7 | Add deployment configs + Python 3.14 compatible requirements<br>Add deployment configs for Railway, Render, Cloud Run, Fly.io<br>docs: design the opportunity-aggregator MVP<br>Make save failures diagnosable instead of a generic error<br>Add interactive 3D bridge scene and motion design<br>Add runnable student workflow prototype with explainable matching<br>Define SkillBridge product foundation |
 
