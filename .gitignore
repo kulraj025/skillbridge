@@ -1,31 +1,14 @@
-# Python
 __pycache__/
 *.py[cod]
 .venv/
 venv/
-.pytest_cache/
-.mypy_cache/
-
-# JavaScript / frontend
-node_modules/
-dist/
-build/
-.vite/
-coverage/
-
-# Local databases and secrets
-*.db
-*.sqlite3
-backend/data/
 .env
 .env.*
 !.env.example
-
-# Editors and OS files
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db
-
-# Logs
+backend/data/
+*.db
+*.sqlite3
 *.log
+node_modules/
+.DS_Store
+demo_nlp.py
