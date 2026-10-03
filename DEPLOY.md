@@ -27,7 +27,7 @@ This is not hidden. `GET /api/health` reports it:
   "service": "skillbridge",
   "version": "0.1.0",
   "database": {
-    "path": "/app/backend/data/skillbridge.db",
+    "path": "skillbridge.db",
     "storage": "container-filesystem",
     "persistent": false,
     "warning": "Profiles, opportunities and matches are stored in a container filesystem and will be lost on the next deploy or restart. Attach a persistent volume, or set SKILLBRIDGE_DB to a mounted path."
@@ -37,6 +37,10 @@ This is not hidden. `GET /api/health` reports it:
 
 `"persistent": true` means the database sits on a real block filesystem rather
 than an overlay or tmpfs. Check this after deploying, before sharing the link.
+
+The reported `path` is the file name only. This endpoint is public, so it does
+not hand out the host's directory layout or service account; the real path is
+in `SKILLBRIDGE_DB` and in the startup logs.
 
 **3. There is no authentication.** Every endpoint is open. Anyone with the URL
 can create profiles, opportunities and matches, and can read everything stored.

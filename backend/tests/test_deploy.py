@@ -85,9 +85,17 @@ class DeployConfigTests(unittest.TestCase):
 
 
 class StorageReportTests(unittest.TestCase):
-    def test_report_names_the_database_path(self):
+    def test_report_names_the_database_file(self):
         report = db.storage_report()
-        self.assertEqual(report["path"], str(db.DB_PATH))
+        self.assertEqual(report["path"], db.DB_PATH.name)
+
+    def test_report_never_leaks_the_host_directory_layout(self):
+        # The endpoint is public. A full path would reveal the OS, the service
+        # account and the host layout.
+        report = db.storage_report()
+        self.assertNotIn("/", report["path"])
+        self.assertNotIn("\\", report["path"])
+        self.assertLess(len(report["path"]), 60)
 
     def test_storage_is_one_of_two_known_states(self):
         self.assertIn(db.storage_report()["storage"], ("volume", "container-filesystem"))

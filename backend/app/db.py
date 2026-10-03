@@ -155,10 +155,17 @@ def on_mounted_volume(path: Path = None) -> bool:
 
 
 def storage_report(path: Path = None) -> Dict[str, Any]:
-    """Describe where the database lives, without overselling durability."""
-    persistent = on_mounted_volume(path)
+    """Describe where the database lives, without overselling durability.
+
+    Only the file name is reported. This endpoint is public, and a full path
+    would hand out the operating system, the service account name and the
+    directory layout of the host for no benefit to a caller. The real path is
+    still in SKILLBRIDGE_DB and in the startup logs.
+    """
+    target = path or DB_PATH
+    persistent = on_mounted_volume(target)
     return {
-        "path": str(path or DB_PATH),
+        "path": target.name,
         "storage": "volume" if persistent else "container-filesystem",
         "persistent": persistent,
         "warning": None
