@@ -1,3 +1,12 @@
+# Railway configuration for SkillBridge.
+#
+# Railway reads this file from the repository root. Note that a persistent
+# volume cannot be declared here: create one in the Railway dashboard
+# (Volumes -> New Volume -> mount at /data) and then set
+# SKILLBRIDGE_DB=/data/skillbridge.db as a service variable. Without that step
+# the SQLite file lives in the container filesystem and is erased on every
+# redeploy. /api/health reports which of the two you actually have.
+
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
@@ -5,8 +14,7 @@ dockerfilePath = "Dockerfile"
 [deploy]
 healthcheckPath = "/api/health"
 healthcheckTimeout = 100
+# Restart on crash, not just on failure to deploy. A wedged container should
+# come back rather than silently serving nothing.
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
-
-[[services]]
-name = "skillbridge"

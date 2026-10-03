@@ -9,7 +9,7 @@ from typing import Any, Dict, List
 from fastapi import FastAPI, HTTPException, status
 from fastapi.staticfiles import StaticFiles
 
-from .db import init_db
+from .db import init_db, storage_report
 from .matcher import match_profile_to_opportunity
 from .models import ExtractCreate, MatchCreate, OpportunityCreate, ProfileCreate
 from .nlp import extract_listing
@@ -34,8 +34,13 @@ init_db()
 
 
 @app.get("/api/health")
-def health() -> Dict[str, str]:
-    return {"status": "ok", "service": "skillbridge", "version": "0.1.0"}
+def health() -> Dict[str, Any]:
+    return {
+        "status": "ok",
+        "service": "skillbridge",
+        "version": "0.1.0",
+        "database": storage_report(),
+    }
 
 
 @app.get("/api/profiles")

@@ -1,3 +1,15 @@
+# Render blueprint for SkillBridge.
+#
+# Render injects a PORT variable and forwards traffic to it. The Dockerfile
+# reads that variable, so the container binds where Render expects it.
+#
+# Storage caveat that matters before you rely on this: the free plan has no
+# persistent disk, so /app/backend/data is container-local and every profile,
+# opportunity and match is lost on each deploy or restart. GET /api/health
+# reports `"persistent": false` so a visitor can see that rather than
+# discovering it after trusting the data. Attach a disk (paid plan) and point
+# SKILLBRIDGE_DB at it to fix this.
+
 services:
   - type: web
     name: skillbridge
